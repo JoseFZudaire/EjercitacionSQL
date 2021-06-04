@@ -129,5 +129,49 @@ having (select sum(Factura.fact_total)
 order by 2 desc;
 
 --Ejercicio 12
+use GD2015C1;
+
+select Producto.prod_detalle NombreProducto, avg(Item_Factura.item_precio) ImportePromedio, 
+	count(distinct Factura.fact_cliente) CantidadClientes, 
+	isnull((select count(distinct STOCK.stoc_deposito) from dbo.STOCK 
+		where STOCK.stoc_producto = Producto.prod_codigo
+		and STOCK.stoc_cantidad > 0
+		group by STOCK.stoc_producto),0) CantidadDepositos,
+	isnull((select sum(STOCK.stoc_cantidad) from dbo.STOCK 
+		where STOCK.stoc_producto = Producto.prod_codigo
+		group by STOCK.stoc_producto),0) StockActualProducto
+from dbo.Producto 
+	join dbo.Item_Factura on Item_Factura.item_producto = Producto.prod_codigo
+	join dbo.Factura on Item_Factura.item_tipo = Factura.fact_tipo
+		and Factura.fact_sucursal = Item_Factura.item_sucursal
+		and Factura.fact_numero = Item_Factura.item_numero
+where exists
+	(select Item_Factura.item_producto 
+	from dbo.Item_Factura Item_Factura2
+		join dbo.Factura on Item_Factura2.item_tipo = Factura.fact_tipo
+		and Factura.fact_sucursal = Item_Factura2.item_sucursal
+		and Factura.fact_numero = Item_Factura2.item_numero
+	where year(Factura.fact_fecha) = 2012
+		and Item_Factura2.item_producto = Producto.prod_codigo)
+group by Producto.prod_codigo,Producto.prod_detalle 
+order by sum(Item_Factura.item_cantidad * Item_Factura.item_precio) desc;
+
+--Ejercicio 13
+select Producto1.prod_detalle NombreProducto, Producto1.prod_precio PrecioProducto, 
+	 sum(Composicion.comp_cantidad*Producto2.prod_precio) PrecioComponentes
+from dbo.Composicion
+	join dbo.Producto Producto1 on Producto1.prod_codigo = Composicion.comp_producto
+	join dbo.Producto Producto2 on Producto2.prod_codigo = Composicion.comp_componente
+group by Producto1.prod_codigo, Producto1.prod_detalle, Producto1.prod_precio, Composicion.comp_producto
+having count(distinct Composicion.comp_componente) > 2
+order by count(distinct Composicion.comp_componente) desc;
+
+--
+
+
+
+
+
+
 
 
