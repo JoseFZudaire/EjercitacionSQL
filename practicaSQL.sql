@@ -234,7 +234,7 @@ having (select sum(Item_Factura.item_cantidad)
 order by Cliente.clie_domicilio asc;
 
 --Ejercicio 17
-select isnull(convert(char(4),year(Factura2.fact_fecha)) + convert(char(2), month(Factura2.fact_fecha)),0) as 'PERIODO',
+select isnull(convert(char(4),year(Factura2.fact_fecha)) + convert(char(2), right('0' + rtrim(month(Factura2.fact_fecha)), 2)),0) as 'PERIODO',
 	isnull(Item_Factura.item_producto,0) as 'PROD',
 	isnull(Producto.prod_detalle,0) as 'DETALLE',
 	isnull(sum(Item_Factura.item_cantidad),0) as 'CANTIDAD_VENDIDA',
@@ -243,15 +243,14 @@ select isnull(convert(char(4),year(Factura2.fact_fecha)) + convert(char(2), mont
 		join dbo.Item_Factura on Item_Factura.item_numero = Factura1.fact_numero
 	where month(Factura1.fact_fecha) = month(Factura2.fact_fecha)
 		and year(Factura1.fact_fecha) = year(Factura2.fact_fecha) - 1
-	group by Factura1.fact_fecha, Factura1.fact_numero, Item_Factura.item_producto),0) as 'VENTAS_AÑO_ANT',
+		and Item_Factura.item_producto = Producto.prod_codigo),0) as 'VENTAS_AÑO_ANT',
 	isnull(count(Factura2.fact_numero),0) as 'CANT_FACTURAS'
 from dbo.Factura Factura2
 	join dbo.Item_Factura on Factura2.fact_numero = Item_Factura.item_numero
 		and Item_Factura.item_tipo = Factura2.fact_tipo 
 		and Item_Factura.item_sucursal = Factura2.fact_sucursal
 	join dbo.Producto on Producto.prod_codigo = Item_Factura.item_producto
-group by Factura2.fact_fecha, Factura2.fact_numero, Item_Factura.item_producto, 
-	Producto.prod_detalle
+group by Producto.prod_codigo, Item_Factura.item_producto, Producto.prod_detalle, Factura2.fact_fecha
 order by Factura2.fact_fecha asc, Item_Factura.item_producto desc;
 
 
