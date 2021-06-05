@@ -166,7 +166,49 @@ group by Producto1.prod_codigo, Producto1.prod_detalle, Producto1.prod_precio, C
 having count(distinct Composicion.comp_componente) > 2
 order by count(distinct Composicion.comp_componente) desc;
 
---
+--Ejercicio 14
+select Factura1.fact_cliente CodCliente, isnull(count(distinct Factura1.fact_numero),0) CantVeces,
+	isnull((select avg(Factura2.fact_total) from dbo.Factura Factura2 
+		where Factura2.fact_cliente = Factura1.fact_cliente
+		and year(Factura2.fact_fecha) = (select max(year(Factura4.fact_fecha)) from dbo.Factura Factura4)),0) PromedioCompra,
+	isnull(count(distinct Item_Factura.item_producto),0) CantidadProductosDif,
+	isnull(max(Factura1.fact_total),0) MontoMayorCompra
+from dbo.Factura Factura1
+	join dbo.Item_Factura on Factura1.fact_numero = Item_Factura.item_numero
+where year(Factura1.fact_fecha) = (select max(year(Factura3.fact_fecha)) from dbo.Factura Factura3)
+group by Factura1.fact_cliente
+order by count(distinct Factura1.fact_numero) desc;
+
+--Ejercicio 15
+select count(*) Cantidad,
+	(select distinct Producto.prod_codigo from dbo.Producto 
+		where Producto.prod_codigo = Item1.item_producto) CodigoItem1,
+	(select distinct Producto.prod_detalle from dbo.Producto 
+		where Producto.prod_codigo = Item1.item_producto) DetalleItem1,
+	(select distinct Producto.prod_codigo from dbo.Producto 
+		where Producto.prod_codigo = Item2.item_producto) CodigoItem2,
+	(select distinct Producto.prod_detalle from dbo.Producto 
+		where Producto.prod_codigo = Item2.item_producto) DetalleItem2
+from Item_Factura Item1 
+	join Item_Factura Item2 on Item1.item_numero = Item2.item_numero
+where Item1.item_numero = Item2.item_numero and
+	Item1.item_sucursal = Item2.item_sucursal and
+	Item1.item_tipo = Item2.item_tipo and
+	Item1.item_producto != Item2.item_producto and
+	Item1.item_producto > Item2.item_producto
+group by Item1.item_producto, Item2.item_producto
+having count(*) > 500
+order by 1;
+
+
+
+
+
+
+
+
+
+
 
 
 
