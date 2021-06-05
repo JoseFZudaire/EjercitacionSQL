@@ -200,6 +200,40 @@ group by Item1.item_producto, Item2.item_producto
 having count(*) > 500
 order by 1;
 
+--Ejercicio 16
+use GD2015C1;
+
+select Cliente.clie_razon_social NombreCliente, count(Item_Factura.item_numero) CantidadUnidades,
+	(select top 1 Item_Factura.item_producto
+	from dbo.Item_Factura
+		join Factura on Factura.fact_numero = Item_Factura.item_numero
+	where Factura.fact_cliente = Cliente.clie_codigo and year(Factura.fact_fecha) = 2012
+	group by Factura.fact_cliente, Item_Factura.item_producto
+	order by sum(Item_Factura.item_cantidad) desc, Factura.fact_cliente asc) CodigoProductoMaxVenta
+from dbo.Cliente
+	join dbo.Factura on Cliente.clie_codigo = Factura.fact_cliente
+	join dbo.Item_Factura on Item_Factura.item_numero = Factura.fact_numero
+where year(Factura.fact_fecha) = 2012
+group by Cliente.clie_codigo, Item_Factura.item_numero
+having (select sum(Item_Factura.item_cantidad)
+		from dbo.Item_Factura
+			join dbo.Factura on Item_Factura.item_numero = Factura.fact_numero
+		where year(Factura.fact_fecha) = 2012 and Factura.fact_cliente = Cliente.clie_codigo
+		group by Factura.fact_cliente) > 1/3 *
+		(select top 1 avg(Item_Factura.item_cantidad)
+		from dbo.Item_Factura
+			join dbo.Factura on Item_Factura.item_numero = Factura.fact_numero
+		where (select top 1 Item_Factura.item_producto
+				from dbo.Item_Factura
+					join dbo.Factura on Item_Factura.item_numero = Factura.fact_numero
+				where year(Factura.fact_fecha) = 2012
+				group by Item_Factura.item_producto
+				order by sum(Item_Factura.item_cantidad)) = Item_Factura.item_producto
+		group by Factura.fact_cliente)
+
+
+
+
 
 
 
