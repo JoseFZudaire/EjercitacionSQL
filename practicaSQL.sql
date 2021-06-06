@@ -253,7 +253,37 @@ from dbo.Factura Factura2
 group by Producto.prod_codigo, Item_Factura.item_producto, Producto.prod_detalle, Factura2.fact_fecha
 order by Factura2.fact_fecha asc, Item_Factura.item_producto desc;
 
-
+--Ejercicio 18
+select Rubro.rubr_detalle as 'DETALLE_RUBRO',
+	isnull(sum(Item_Factura.item_cantidad * Item_Factura.item_precio),0) as 'VENTAS',
+	isnull((select top 1 Producto2.prod_codigo 
+	from dbo.Producto Producto2
+		join Item_Factura Item2 on Item2.item_producto = Producto2.prod_codigo
+	where Producto2.prod_rubro = Rubro.rubr_id
+	group by Producto2.prod_codigo
+	order by sum(Item_Factura.item_cantidad)),0) as 'PROD1',
+	isnull((select Producto3.prod_codigo 
+	from dbo.Producto Producto3
+	where Producto3.prod_rubro = Rubro.rubr_id
+	group by Producto3.prod_codigo
+	order by sum(Item_Factura.item_cantidad)
+	offset 1 rows
+	fetch next 1 rows only),0) as 'PROD2',
+	isnull((select top 1 Factura.fact_cliente
+	from dbo.Item_Factura
+		join dbo.Factura on Factura.fact_numero = Item_Factura.item_numero
+		join dbo.Producto on Producto.prod_codigo = Item_Factura.item_producto
+	where Producto.prod_rubro = Rubro.rubr_id and 
+		Factura.fact_fecha > dateadd(month,-1,(select max(Factura.fact_fecha) from dbo.Factura))
+	group by Producto.prod_codigo, Factura.fact_cliente
+	order by sum(Item_Factura.item_cantidad) desc),0) as 'CLIENTE'
+from dbo.Item_Factura
+	join dbo.Factura on Factura.fact_numero = Item_Factura.item_numero
+	join dbo.Cliente on Cliente.clie_codigo = Factura.fact_cliente
+	join dbo.Producto on Producto.prod_codigo = Item_Factura.item_producto
+	join dbo.Rubro on Producto.prod_rubro = Rubro.rubr_id
+group by Rubro.rubr_id, Rubro.rubr_detalle
+order by count(distinct Producto.prod_codigo);
 
 
 
